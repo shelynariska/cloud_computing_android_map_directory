@@ -13,7 +13,7 @@ class FavoritesScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final favoriteCafes = ref.watch(getFavoriteCafesProvider);
+    final favoriteCafes = ref.watch(favoriteCafesProvider);
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -29,8 +29,28 @@ class FavoritesScreen extends ConsumerWidget {
         backgroundColor: AppColors.background,
         elevation: 0,
       ),
-      body: favoriteCafes.isEmpty
-          ? Center(
+      body: favoriteCafes.when(
+        loading: () => Center(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 40.0),
+            child: const CircularProgressIndicator(),
+          ),
+        ),
+        error: (error, stack) => Center(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 40.0),
+            child: Text(
+              'Error: ${error.toString()}',
+              style: GoogleFonts.inter(
+                fontSize: 14,
+                color: AppColors.destructive,
+              ),
+            ),
+          ),
+        ),
+        data: (cafes) {
+          if (cafes.isEmpty)
+            return Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -83,38 +103,40 @@ class FavoritesScreen extends ConsumerWidget {
                   ),
                 ],
               ),
-            )
-          : SingleChildScrollView(
-              child: Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
-                child: Column(
-                  children: [
-                    ListView.builder(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      itemCount: favoriteCafes.length,
-                      itemBuilder: (context, index) {
-                        final cafe = favoriteCafes[index];
-                        return Padding(
-                          padding: const EdgeInsets.only(bottom: 16.0),
-                          child: GestureDetector(
-                            onTap: () {
-                              context.pushNamed(
-                                AppRoute.cafeDetail.name,
-                                pathParameters: {'id': cafe.id},
-                              );
-                            },
-                            child: CafeCard(cafe: cafe),
-                          ),
-                        );
-                      },
-                    ),
-                    const SizedBox(height: 80),
-                  ],
-                ),
+            );
+          return SingleChildScrollView(
+            child: Padding(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+              child: Column(
+                children: [
+                  ListView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: cafes.length,
+                    itemBuilder: (context, index) {
+                      final cafe = cafes[index];
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 16.0),
+                        child: GestureDetector(
+                          onTap: () {
+                            context.pushNamed(
+                              AppRoute.cafeDetail.name,
+                              pathParameters: {'id': cafe.id},
+                            );
+                          },
+                          child: CafeCard(cafe: cafe),
+                        ),
+                      );
+                    },
+                  ),
+                  const SizedBox(height: 80),
+                ],
               ),
             ),
+          );
+        },
+      ),
       bottomNavigationBar: const BottomNav(currentIndex: 2),
     );
   }

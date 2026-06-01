@@ -88,24 +88,25 @@ class _NavItem extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
         decoration: BoxDecoration(
           color: isActive ? AppColors.muted : Colors.transparent,
           borderRadius: BorderRadius.circular(12),
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
           children: [
             Icon(
               icon,
               color: isActive ? AppColors.primary : AppColors.mutedForeground,
-              size: 24,
+              size: 20,
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: 2),
             Text(
               label,
               style: GoogleFonts.inter(
-                fontSize: 10,
+                fontSize: 9,
                 fontWeight: FontWeight.w500,
                 color:
                     isActive ? AppColors.primary : AppColors.mutedForeground,

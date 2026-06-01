@@ -45,7 +45,7 @@ final List<RouteBase> appRoutes = [
   GoRoute(
     path: AppRoute.map.path,
     name: AppRoute.map.name,
-    builder: (context, state) => const MapScreen(),
+    builder: (context, state) => const MapPage(),
   ),
   GoRoute(
     path: AppRoute.favorites.path,

@@ -87,51 +87,72 @@ class HomeScreen extends ConsumerWidget {
               ),
               const SizedBox(height: 12),
 
-              if (filteredCafes.isEmpty)
-                Center(
+              filteredCafes.when(
+                loading: () => Center(
                   child: Padding(
                     padding: const EdgeInsets.symmetric(vertical: 40.0),
-                    child: Column(
-                      children: [
-                        Icon(
-                          Icons.coffee_outlined,
-                          size: 64,
-                          color: AppColors.muted,
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          'Tidak ada kafe yang cocok',
-                          style: GoogleFonts.poppins(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w500,
-                            color: AppColors.mutedForeground,
-                          ),
-                        ),
-                      ],
+                    child: const CircularProgressIndicator(),
+                  ),
+                ),
+                error: (error, stack) => Center(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 40.0),
+                    child: Text(
+                      'Error: ${error.toString()}',
+                      style: GoogleFonts.inter(
+                        fontSize: 14,
+                        color: AppColors.destructive,
+                      ),
                     ),
                   ),
-                )
-              else
-                ListView.builder(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  itemCount: filteredCafes.length,
-                  itemBuilder: (context, index) {
-                    final cafe = filteredCafes[index];
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: 16.0),
-                      child: GestureDetector(
-                        onTap: () {
-                          context.pushNamed(
-                            AppRoute.cafeDetail.name,
-                            pathParameters: {'id': cafe.id},
-                          );
-                        },
-                        child: CafeCard(cafe: cafe),
+                ),
+                data: (cafes) {
+                  if (cafes.isEmpty)
+                    return Center(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 40.0),
+                        child: Column(
+                          children: [
+                            Icon(
+                              Icons.coffee_outlined,
+                              size: 64,
+                              color: AppColors.muted,
+                            ),
+                            const SizedBox(height: 16),
+                            Text(
+                              'Tidak ada kafe yang cocok',
+                              style: GoogleFonts.poppins(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w500,
+                                color: AppColors.mutedForeground,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     );
-                  },
-                ),
+                  return ListView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: cafes.length,
+                    itemBuilder: (context, index) {
+                      final cafe = cafes[index];
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 16.0),
+                        child: GestureDetector(
+                          onTap: () {
+                            context.pushNamed(
+                              AppRoute.cafeDetail.name,
+                              pathParameters: {'id': cafe.id},
+                            );
+                          },
+                          child: CafeCard(cafe: cafe),
+                        ),
+                      );
+                    },
+                  );
+                },
+              ),
               const SizedBox(height: 80),
             ],
           ),

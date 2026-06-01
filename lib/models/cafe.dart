@@ -1,5 +1,5 @@
-import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:latlong2/latlong.dart';
 
 enum CafeRegion {
   centre('Centre - Pusat Kota'),
@@ -61,30 +61,75 @@ class Cafe {
 
   factory Cafe.fromJson(Map<String, dynamic> json) {
     return Cafe(
-      id: json['id'] ?? '',
-      name: json['name'] ?? '',
-      description: json['description'] ?? '',
-      imageUrl: json['imageUrl'] ?? '',
-      rating: (json['rating'] ?? 0.0).toDouble(),
-      reviewCount: json['reviewCount'] ?? 0,
-      latitude: (json['latitude'] ?? 0.0).toDouble(),
-      longitude: (json['longitude'] ?? 0.0).toDouble(),
+      id: (json['id'] ?? '').toString(),
+      name: (json['name'] ?? '').toString(),
+      description: (json['description'] ?? '').toString(),
+      imageUrl: (json['image_url'] ?? json['imageUrl'] ?? '').toString(),
+      rating: _toDouble(json['rating'] ?? 4.0),
+      reviewCount: _toInt(json['review_count'] ?? json['reviewCount'] ?? 0),
+      // Supabase uses 'lat' and 'lng' instead of 'latitude' and 'longitude'
+      // Also handle variations: lat, latitude, lat_value, latitude_value
+      latitude: _toDouble(
+        json['lat'] ??
+            json['latitude'] ??
+            json['lat_value'] ??
+            json['latitude_value'] ??
+            0.0,
+      ),
+      // Handle longitude variations: lng, longitude, lon, long, long_value, longitude_value, lon_value
+      longitude: _toDouble(json['lon'] ?? json['lng'] ?? json['longitude'] ?? json['long'] ?? 0.0),
       region: CafeRegion.values.firstWhere(
-        (e) => e.name == json['region'],
+        (e) => e.name == (json['region'] ?? 'centre').toString(),
         orElse: () => CafeRegion.centre,
       ),
-      address: json['address'] ?? '',
-      phone: json['phone'] ?? '',
-      operatingHours: json['operatingHours'],
-      amenities: List<String>.from(json['amenities'] ?? []),
-      coffeeTypes: List<String>.from(json['coffeeTypes'] ?? []),
-      priceRange: (json['priceRange'] ?? 1.0).toDouble(),
-      wifi: json['wifi'] ?? false,
-      parking: json['parking'] ?? false,
-      petFriendly: json['petFriendly'] ?? false,
-      workspace: json['workspace'] ?? false,
-      isFavorite: json['isFavorite'] ?? false,
+      address: (json['address'] ?? '').toString(),
+      phone: (json['phone'] ?? '').toString(),
+      operatingHours: json['opening_hours'] != null ? (json['opening_hours']).toString() : (json['operatingHours'] != null ? (json['operatingHours']).toString() : null),
+      amenities: _parseList(json['amenities']),
+      coffeeTypes: _parseList(json['coffee_types'] ?? json['coffeeTypes']),
+      priceRange: _toDouble(json['price_range'] ?? json['priceRange'] ?? 3.0),
+      wifi: _toBool(json['has_wifi'] ?? json['wifi'] ?? false),
+      parking: _toBool(json['has_parking'] ?? json['parking'] ?? false),
+      petFriendly: _toBool(json['pet_friendly'] ?? json['petFriendly'] ?? false),
+      workspace: _toBool(json['good_for_working'] ?? json['workspace'] ?? false),
+      isFavorite: _toBool(json['isFavorite'] ?? false),
     );
+  }
+
+  // Helper methods untuk safe type conversion
+  static double _toDouble(dynamic value) {
+    if (value == null) return 0.0;
+    if (value is double) return value;
+    if (value is int) return value.toDouble();
+    if (value is String) return double.tryParse(value) ?? 0.0;
+    return 0.0;
+  }
+
+  static int _toInt(dynamic value) {
+    if (value == null) return 0;
+    if (value is int) return value;
+    if (value is double) return value.toInt();
+    if (value is String) return int.tryParse(value) ?? 0;
+    return 0;
+  }
+
+  static bool _toBool(dynamic value) {
+    if (value == null) return false;
+    if (value is bool) return value;
+    if (value is int) return value != 0;
+    if (value is String) return value.toLowerCase() == 'true' || value == '1';
+    return false;
+  }
+
+  // Helper method untuk parse list dari JSON (bisa string atau list)
+  static List<String> _parseList(dynamic value) {
+    if (value == null) return [];
+    if (value is List) return List<String>.from(value);
+    if (value is String) {
+      // Jika string, split by comma
+      return value.split(',').map((e) => e.trim()).toList();
+    }
+    return [];
   }
 
   Map<String, dynamic> toJson() {
@@ -92,11 +137,11 @@ class Cafe {
       'id': id,
       'name': name,
       'description': description,
-      'imageUrl': imageUrl,
+      'image_url': imageUrl,
       'rating': rating,
-      'reviewCount': reviewCount,
-      'latitude': latitude,
-      'longitude': longitude,
+      'review_count': reviewCount,
+      'lat': latitude,
+      'lng': longitude,
       'region': region.name,
       'address': address,
       'phone': phone,
@@ -110,6 +155,52 @@ class Cafe {
       'workspace': workspace,
       'isFavorite': isFavorite,
     };
+  }
+
+  Cafe copyWith({
+    String? id,
+    String? name,
+    String? description,
+    String? imageUrl,
+    double? rating,
+    int? reviewCount,
+    double? latitude,
+    double? longitude,
+    CafeRegion? region,
+    String? address,
+    String? phone,
+    String? operatingHours,
+    List<String>? amenities,
+    List<String>? coffeeTypes,
+    double? priceRange,
+    bool? wifi,
+    bool? parking,
+    bool? petFriendly,
+    bool? workspace,
+    bool? isFavorite,
+  }) {
+    return Cafe(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      description: description ?? this.description,
+      imageUrl: imageUrl ?? this.imageUrl,
+      rating: rating ?? this.rating,
+      reviewCount: reviewCount ?? this.reviewCount,
+      latitude: latitude ?? this.latitude,
+      longitude: longitude ?? this.longitude,
+      region: region ?? this.region,
+      address: address ?? this.address,
+      phone: phone ?? this.phone,
+      operatingHours: operatingHours ?? this.operatingHours,
+      amenities: amenities ?? this.amenities,
+      coffeeTypes: coffeeTypes ?? this.coffeeTypes,
+      priceRange: priceRange ?? this.priceRange,
+      wifi: wifi ?? this.wifi,
+      parking: parking ?? this.parking,
+      petFriendly: petFriendly ?? this.petFriendly,
+      workspace: workspace ?? this.workspace,
+      isFavorite: isFavorite ?? this.isFavorite,
+    );
   }
 
 double getDistance(LatLng userLocation) {
