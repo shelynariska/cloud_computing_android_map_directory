@@ -196,6 +196,40 @@ class _MapPageState extends ConsumerState<MapPage>
         backgroundColor: AppColors.background,
         elevation: 0,
         actions: [
+          // Radius dropdown
+          Container(
+            margin: const EdgeInsets.symmetric(vertical: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 8),
+            decoration: BoxDecoration(
+              color: Colors.brown,
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: DropdownButtonHideUnderline(
+              child: DropdownButton<double>(
+                value: radiusKm,
+                dropdownColor: Colors.brown,
+                icon: const Icon(Icons.keyboard_arrow_down, color: Colors.white, size: 16),
+                items: [0.5, 1.0, 2.0, 5.0].map((km) {
+                  return DropdownMenuItem(
+                    value: km,
+                    child: Text(
+                      '${km % 1 == 0 ? km.toInt() : km} km',
+                      style: const TextStyle(color: Colors.white, fontSize: 13),
+                    ),
+                  );
+                }).toList(),
+                onChanged: (value) {
+                  if (value != null) setState(() => radiusKm = value);
+                },
+              ),
+            ),
+          ),
+          // Favorit button
+          IconButton(
+            icon: const Icon(Icons.favorite_border, color: Colors.brown),
+            onPressed: () => context.pushNamed(AppRoute.favorites.name),
+          ),
+          // My location button
           if (currentPosition != null)
             IconButton(
               icon: const Icon(Icons.my_location),
@@ -235,10 +269,10 @@ class _MapPageState extends ConsumerState<MapPage>
               // CartoDB Positron Tile Layer (cleaner, more professional)
               TileLayer(
                 urlTemplate:
-                    'https://{s}.basemaps.cartocdn.com/positron/{z}/{x}/{y}{r}.png',
+                    'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
                 subdomains: const ['a', 'b', 'c'],
                 userAgentPackageName: 'com.example.cafescope_sby',
-                retinaMode: true,
+                retinaMode: false,
               ),
 
               // Circle Marker - Radius around user location with pulse effect
@@ -298,6 +332,14 @@ class _MapPageState extends ConsumerState<MapPage>
                   return const SizedBox.shrink();
                 },
                 data: (cafes) {
+                    final filteredCafes = currentPosition != null
+                      ? cafes.where((c) => _calculateDistance(
+                              currentPosition!.latitude,
+                              currentPosition!.longitude,
+                              c.latitude,
+                              c.longitude) <= radiusKm)
+                          .toList()
+                      : cafes;
                   return MarkerLayer(
                     markers: [
                       // User location marker
@@ -313,7 +355,7 @@ class _MapPageState extends ConsumerState<MapPage>
                         ),
 
                       // Cafe markers
-                      ...cafes.map((cafe) {
+                      ...filteredCafes.map((cafe) {
                         final distance = currentPosition != null
                             ? _calculateDistance(
                                 currentPosition!.latitude,
@@ -365,6 +407,45 @@ class _MapPageState extends ConsumerState<MapPage>
                     Text('Mendapatkan lokasi Anda...'),
                   ],
                 ),
+              ),
+            ),
+
+            // Info bar cafes found
+            Positioned(
+              top: 12,
+              left: 12,
+              child: cafesAsync.when(
+                loading: () => const SizedBox.shrink(),
+                error: (_, __) => const SizedBox.shrink(),
+                data: (cafes) {
+                  final filtered = currentPosition != null
+                      ? cafes.where((c) => _calculateDistance(
+                              currentPosition!.latitude,
+                              currentPosition!.longitude,
+                              c.latitude,
+                              c.longitude) <= radiusKm)
+                          .toList()
+                      : cafes;
+                  return Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(20),
+                      boxShadow: [BoxShadow(color: Colors.black26, blurRadius: 4)],
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.local_cafe, size: 14, color: Colors.brown),
+                        const SizedBox(width: 4),
+                        Text(
+                          '${filtered.length} cafes found (${radiusKm % 1 == 0 ? radiusKm.toInt() : radiusKm} km)',
+                          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                        ),
+                      ],
+                    ),
+                  );
+                },
               ),
             ),
         ],

@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cafescope_sby/models/cafe.dart';
 import 'package:cafescope_sby/services/supabase_service.dart';
 import 'package:cafescope_sby/data/mock_cafes.dart';
+import 'dart:math';
 
 final supabaseServiceProvider = Provider<SupabaseService>((ref) {
   return SupabaseService();
@@ -127,7 +128,8 @@ final filteredCafesProvider = Provider<AsyncValue<List<Cafe>>>((ref) {
       }
 
       // Sort by rating
-      filtered.sort((a, b) => b.rating.compareTo(a.rating));
+      // filtered.sort((a, b) => b.rating.compareTo(a.rating));
+      filtered.shuffle(Random());
 
       return AsyncValue.data(filtered);
     },
