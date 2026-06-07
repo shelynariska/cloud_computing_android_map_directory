@@ -78,7 +78,7 @@ class _MapPageState extends ConsumerState<MapPage>
 
       // Check location permission
       LocationPermission permission = await Geolocator.checkPermission();
-      
+
       if (permission == LocationPermission.denied) {
         permission = await Geolocator.requestPermission();
       }
@@ -87,7 +87,9 @@ class _MapPageState extends ConsumerState<MapPage>
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text('Izin lokasi ditolak. Buka Pengaturan untuk mengaktifkan.'),
+              content: Text(
+                'Izin lokasi ditolak. Buka Pengaturan untuk mengaktifkan.',
+              ),
             ),
           );
         }
@@ -118,9 +120,9 @@ class _MapPageState extends ConsumerState<MapPage>
     } catch (e) {
       if (mounted) {
         setState(() => isLoadingLocation = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error mendapatkan lokasi: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error mendapatkan lokasi: $e')));
       }
     }
   }
@@ -145,10 +147,12 @@ class _MapPageState extends ConsumerState<MapPage>
       final url =
           'https://router.project-osrm.org/route/v1/driving/${start.longitude},${start.latitude};${end.longitude},${end.latitude}?steps=true&geometries=geojson';
 
-      final response = await http.get(Uri.parse(url)).timeout(
-        const Duration(seconds: 10),
-        onTimeout: () => throw Exception('Route request timeout'),
-      );
+      final response = await http
+          .get(Uri.parse(url))
+          .timeout(
+            const Duration(seconds: 10),
+            onTimeout: () => throw Exception('Route request timeout'),
+          );
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -156,7 +160,9 @@ class _MapPageState extends ConsumerState<MapPage>
           final route = data['routes'][0];
           final geometry = route['geometry']['coordinates'] as List;
           final points =
-              geometry.map<LatLng>((coord) => LatLng(coord[1], coord[0])).toList();
+              geometry
+                  .map<LatLng>((coord) => LatLng(coord[1], coord[0]))
+                  .toList();
 
           setState(() {
             routePoints = points;
@@ -208,26 +214,29 @@ class _MapPageState extends ConsumerState<MapPage>
               child: DropdownButton<double>(
                 value: radiusKm,
                 dropdownColor: Colors.brown,
-                icon: const Icon(Icons.keyboard_arrow_down, color: Colors.white, size: 16),
-                items: [0.5, 1.0, 2.0, 5.0].map((km) {
-                  return DropdownMenuItem(
-                    value: km,
-                    child: Text(
-                      '${km % 1 == 0 ? km.toInt() : km} km',
-                      style: const TextStyle(color: Colors.white, fontSize: 13),
-                    ),
-                  );
-                }).toList(),
+                icon: const Icon(
+                  Icons.keyboard_arrow_down,
+                  color: Colors.white,
+                  size: 16,
+                ),
+                items:
+                    [0.5, 1.0, 2.0, 5.0].map((km) {
+                      return DropdownMenuItem(
+                        value: km,
+                        child: Text(
+                          '${km % 1 == 0 ? km.toInt() : km} km',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 13,
+                          ),
+                        ),
+                      );
+                    }).toList(),
                 onChanged: (value) {
                   if (value != null) setState(() => radiusKm = value);
                 },
               ),
             ),
-          ),
-          // Favorit button
-          IconButton(
-            icon: const Icon(Icons.favorite_border, color: Colors.brown),
-            onPressed: () => context.pushNamed(AppRoute.favorites.name),
           ),
           // My location button
           if (currentPosition != null)
@@ -268,8 +277,7 @@ class _MapPageState extends ConsumerState<MapPage>
             children: [
               // CartoDB Positron Tile Layer (cleaner, more professional)
               TileLayer(
-                urlTemplate:
-                    'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
                 subdomains: const ['a', 'b', 'c'],
                 userAgentPackageName: 'com.example.cafescope_sby',
                 retinaMode: false,
@@ -299,7 +307,9 @@ class _MapPageState extends ConsumerState<MapPage>
                       ),
                       radius: radiusKm * 1000, // Convert km to meters
                       useRadiusInMeter: true,
-                      color: const Color(0x8B451320), // Transparent brown (#8B4513)
+                      color: const Color(
+                        0x8B451320,
+                      ), // Transparent brown (#8B4513)
                       borderColor: const Color(0xFF8B4513), // Brown border
                       borderStrokeWidth: 2,
                     ),
@@ -332,14 +342,21 @@ class _MapPageState extends ConsumerState<MapPage>
                   return const SizedBox.shrink();
                 },
                 data: (cafes) {
-                    final filteredCafes = currentPosition != null
-                      ? cafes.where((c) => _calculateDistance(
-                              currentPosition!.latitude,
-                              currentPosition!.longitude,
-                              c.latitude,
-                              c.longitude) <= radiusKm)
-                          .toList()
-                      : cafes;
+                  final filteredCafes =
+                      currentPosition != null
+                          ? cafes
+                              .where(
+                                (c) =>
+                                    _calculateDistance(
+                                      currentPosition!.latitude,
+                                      currentPosition!.longitude,
+                                      c.latitude,
+                                      c.longitude,
+                                    ) <=
+                                    radiusKm,
+                              )
+                              .toList()
+                          : cafes;
                   return MarkerLayer(
                     markers: [
                       // User location marker
@@ -356,25 +373,23 @@ class _MapPageState extends ConsumerState<MapPage>
 
                       // Cafe markers
                       ...filteredCafes.map((cafe) {
-                        final distance = currentPosition != null
-                            ? _calculateDistance(
-                                currentPosition!.latitude,
-                                currentPosition!.longitude,
-                                cafe.latitude,
-                                cafe.longitude,
-                              )
-                            : null;
+                        final distance =
+                            currentPosition != null
+                                ? _calculateDistance(
+                                  currentPosition!.latitude,
+                                  currentPosition!.longitude,
+                                  cafe.latitude,
+                                  cafe.longitude,
+                                )
+                                : null;
 
                         return Marker(
                           point: LatLng(cafe.latitude, cafe.longitude),
                           width: 45,
                           height: 45,
                           child: GestureDetector(
-                            onTap: () => _showCafePopup(
-                              context,
-                              cafe,
-                              distance,
-                            ),
+                            onTap:
+                                () => _showCafePopup(context, cafe, distance),
                             child: _buildCafeMarker(
                               cafe.name,
                               _getCategoryMarkerColor(cafe.id),
@@ -410,44 +425,63 @@ class _MapPageState extends ConsumerState<MapPage>
               ),
             ),
 
-            // Info bar cafes found
-            Positioned(
-              top: 12,
-              left: 12,
-              child: cafesAsync.when(
-                loading: () => const SizedBox.shrink(),
-                error: (_, __) => const SizedBox.shrink(),
-                data: (cafes) {
-                  final filtered = currentPosition != null
-                      ? cafes.where((c) => _calculateDistance(
-                              currentPosition!.latitude,
-                              currentPosition!.longitude,
-                              c.latitude,
-                              c.longitude) <= radiusKm)
-                          .toList()
-                      : cafes;
-                  return Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(20),
-                      boxShadow: [BoxShadow(color: Colors.black26, blurRadius: 4)],
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(Icons.local_cafe, size: 14, color: Colors.brown),
-                        const SizedBox(width: 4),
-                        Text(
-                          '${filtered.length} cafes found (${radiusKm % 1 == 0 ? radiusKm.toInt() : radiusKm} km)',
-                          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+          // Info bar cafes found
+          Positioned(
+            top: 12,
+            left: 12,
+            child: cafesAsync.when(
+              loading: () => const SizedBox.shrink(),
+              error: (_, __) => const SizedBox.shrink(),
+              data: (cafes) {
+                final filtered =
+                    currentPosition != null
+                        ? cafes
+                            .where(
+                              (c) =>
+                                  _calculateDistance(
+                                    currentPosition!.latitude,
+                                    currentPosition!.longitude,
+                                    c.latitude,
+                                    c.longitude,
+                                  ) <=
+                                  radiusKm,
+                            )
+                            .toList()
+                        : cafes;
+                return Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: [
+                      BoxShadow(color: Colors.black26, blurRadius: 4),
+                    ],
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(
+                        Icons.local_cafe,
+                        size: 14,
+                        color: Colors.brown,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        '${filtered.length} cafes found (${radiusKm % 1 == 0 ? radiusKm.toInt() : radiusKm} km)',
+                        style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
                         ),
-                      ],
-                    ),
-                  );
-                },
-              ),
+                      ),
+                    ],
+                  ),
+                );
+              },
             ),
+          ),
         ],
       ),
       bottomNavigationBar: const BottomNav(currentIndex: 1),
@@ -469,11 +503,7 @@ class _MapPageState extends ConsumerState<MapPage>
         ],
       ),
       child: const Center(
-        child: Icon(
-          Icons.location_on,
-          color: Colors.white,
-          size: 18,
-        ),
+        child: Icon(Icons.location_on, color: Colors.white, size: 18),
       ),
     );
   }
@@ -502,225 +532,279 @@ class _MapPageState extends ConsumerState<MapPage>
         // Cafe icon or logo inside
         imageUrl != null && imageUrl.isNotEmpty
             ? ClipRRect(
-                borderRadius: BorderRadius.circular(20),
-                child: Image.network(
-                  imageUrl,
-                  width: 44,
-                  height: 44,
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) {
-                    return const Icon(
-                      Icons.local_cafe,
-                      color: Colors.white,
-                      size: 24,
-                    );
-                  },
-                ),
-              )
-            : const Icon(
-                Icons.local_cafe,
-                color: Colors.white,
-                size: 24,
+              borderRadius: BorderRadius.circular(20),
+              child: Image.network(
+                imageUrl,
+                width: 44,
+                height: 44,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) {
+                  return const Icon(
+                    Icons.local_cafe,
+                    color: Colors.white,
+                    size: 24,
+                  );
+                },
               ),
+            )
+            : const Icon(Icons.local_cafe, color: Colors.white, size: 24),
       ],
     );
   }
 
-  double _calculateDistance(double lat1, double lon1, double lat2, double lon2) {
+  double _calculateDistance(
+    double lat1,
+    double lon1,
+    double lat2,
+    double lon2,
+  ) {
     final p = 0.017453292519943295;
-    final a = 0.5 -
+    final a =
+        0.5 -
         cos((lat2 - lat1) * p) / 2 +
-        cos(lat1 * p) *
-            cos(lat2 * p) *
-            (1 - cos((lon2 - lon1) * p)) /
-            2;
+        cos(lat1 * p) * cos(lat2 * p) * (1 - cos((lon2 - lon1) * p)) / 2;
     return 12742 * asin(sqrt(a));
   }
 
   void _showCafePopup(BuildContext context, Cafe cafe, double? distance) {
     showDialog(
       context: context,
-      builder: (context) => Dialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: Container(
-          padding: const EdgeInsets.all(16),
-          child: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Header with cafe name and close button
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      builder:
+          (context) => Dialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Container(
+              padding: const EdgeInsets.all(16),
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            cafe.name,
-                            style: const TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                            ),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          const SizedBox(height: 4),
-                          Row(
+                    // Header with cafe name and close button
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const Icon(Icons.star, size: 16, color: Colors.amber),
-                              const SizedBox(width: 4),
                               Text(
-                                '${cafe.rating} (${cafe.reviewCount} reviews)',
-                                style: const TextStyle(fontSize: 12),
+                                cafe.name,
+                                style: const TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              const SizedBox(height: 4),
+                              Row(
+                                children: [
+                                  const Icon(
+                                    Icons.star,
+                                    size: 16,
+                                    color: Colors.amber,
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    '${cafe.rating} (${cafe.reviewCount} reviews)',
+                                    style: const TextStyle(fontSize: 12),
+                                  ),
+                                ],
                               ),
                             ],
                           ),
+                        ),
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            // Tombol Favorit
+                            Consumer(
+                              builder: (context, ref, _) {
+                                final isFavAsync = ref.watch(
+                                  isCafeFavoritedProvider(cafe.id),
+                                );
+                                return isFavAsync.when(
+                                  data:
+                                      (isFav) => IconButton(
+                                        icon: Icon(
+                                          isFav
+                                              ? Icons.favorite
+                                              : Icons.favorite_outline,
+                                          color:
+                                              isFav ? Colors.red : Colors.grey,
+                                        ),
+                                        onPressed: () {
+                                          ref
+                                              .read(
+                                                toggleFavoriteCafeProvider
+                                                    .notifier,
+                                              )
+                                              .toggleFavorite(cafe.id);
+                                        },
+                                      ),
+                                  loading: () => const SizedBox(width: 48),
+                                  error: (_, __) => const SizedBox(width: 48),
+                                );
+                              },
+                            ),
+                            // Tombol Close
+                            IconButton(
+                              icon: const Icon(Icons.close),
+                              onPressed: () => Navigator.pop(context),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                    const Divider(),
+
+                    // Address and distance
+                    Row(
+                      children: [
+                        const Icon(
+                          Icons.location_on,
+                          size: 16,
+                          color: Colors.red,
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            cafe.address,
+                            style: const TextStyle(fontSize: 13),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+
+                    // Distance
+                    if (distance != null)
+                      Row(
+                        children: [
+                          const Icon(
+                            Icons.straighten,
+                            size: 16,
+                            color: Colors.blue,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Jarak: ${_getDistanceText(distance)}',
+                            style: const TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
                         ],
                       ),
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.close),
-                      onPressed: () => Navigator.pop(context),
-                    ),
-                  ],
-                ),
-                const Divider(),
 
-                // Address and distance
-                Row(
-                  children: [
-                    const Icon(Icons.location_on, size: 16, color: Colors.red),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        cafe.address,
-                        style: const TextStyle(fontSize: 13),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
+                    const SizedBox(height: 12),
 
-                // Distance
-                if (distance != null)
-                  Row(
-                    children: [
-                      const Icon(Icons.straighten, size: 16, color: Colors.blue),
-                      const SizedBox(width: 8),
-                      Text(
-                        'Jarak: ${_getDistanceText(distance)}',
-                        style: const TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ],
-                  ),
-
-                const SizedBox(height: 12),
-
-                // Amenities chips
-                if (cafe.amenities.isNotEmpty)
-                  Wrap(
-                    spacing: 6,
-                    runSpacing: 6,
-                    children: cafe.amenities.take(3).map((amenity) {
-                      return Chip(
-                        label: Text(
-                          amenity,
-                          style: const TextStyle(fontSize: 11),
-                        ),
-                        avatar: _getAmenityIcon(amenity),
-                        visualDensity: VisualDensity.compact,
-                      );
-                    }).toList(),
-                  ),
-
-                const SizedBox(height: 16),
-
-                // Show Route Button
-                if (locationPermissionGranted && currentPosition != null)
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton.icon(
-                      onPressed: isLoadingRoute
-                          ? null
-                          : () {
-                              setState(() => selectedCafe = cafe);
-                              Navigator.pop(context);
-                              _getRouteFromOSRM(
-                                LatLng(
-                                  currentPosition!.latitude,
-                                  currentPosition!.longitude,
+                    // Amenities chips
+                    if (cafe.amenities.isNotEmpty)
+                      Wrap(
+                        spacing: 6,
+                        runSpacing: 6,
+                        children:
+                            cafe.amenities.take(3).map((amenity) {
+                              return Chip(
+                                label: Text(
+                                  amenity,
+                                  style: const TextStyle(fontSize: 11),
                                 ),
-                                LatLng(cafe.latitude, cafe.longitude),
+                                avatar: _getAmenityIcon(amenity),
+                                visualDensity: VisualDensity.compact,
                               );
-                            },
-                      icon: isLoadingRoute
-                          ? const SizedBox(
-                              width: 16,
-                              height: 16,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                valueColor:
-                                    AlwaysStoppedAnimation<Color>(Colors.white),
-                              ),
-                            )
-                          : const Icon(Icons.directions),
-                      label: Text(isLoadingRoute
-                          ? 'Menghitung Rute...'
-                          : 'Tampilkan Rute di Peta'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.brown,
-                        foregroundColor: Colors.white,
-                        disabledBackgroundColor: Colors.grey,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
+                            }).toList(),
+                      ),
+
+                    const SizedBox(height: 16),
+
+                    // Show Route Button
+                    if (locationPermissionGranted && currentPosition != null)
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton.icon(
+                          onPressed:
+                              isLoadingRoute
+                                  ? null
+                                  : () {
+                                    setState(() => selectedCafe = cafe);
+                                    Navigator.pop(context);
+                                    _getRouteFromOSRM(
+                                      LatLng(
+                                        currentPosition!.latitude,
+                                        currentPosition!.longitude,
+                                      ),
+                                      LatLng(cafe.latitude, cafe.longitude),
+                                    );
+                                  },
+                          icon:
+                              isLoadingRoute
+                                  ? const SizedBox(
+                                    width: 16,
+                                    height: 16,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      valueColor: AlwaysStoppedAnimation<Color>(
+                                        Colors.white,
+                                      ),
+                                    ),
+                                  )
+                                  : const Icon(Icons.directions),
+                          label: Text(
+                            isLoadingRoute
+                                ? 'Menghitung Rute...'
+                                : 'Tampilkan Rute di Peta',
+                          ),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.brown,
+                            foregroundColor: Colors.white,
+                            disabledBackgroundColor: Colors.grey,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                        ),
+                      ),
+
+                    if (locationPermissionGranted && currentPosition != null)
+                      const SizedBox(height: 10),
+
+                    // View Details Button
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: () {
+                          Navigator.pop(context);
+                          context.pushNamed(
+                            AppRoute.cafeDetail.name,
+                            pathParameters: {'id': cafe.id},
+                          );
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.primary,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        child: const Text(
+                          'Lihat Detail',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                       ),
                     ),
-                  ),
-
-                if (locationPermissionGranted && currentPosition != null)
-                  const SizedBox(height: 10),
-
-                // View Details Button
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: () {
-                      Navigator.pop(context);
-                      context.pushNamed(
-                        AppRoute.cafeDetail.name,
-                        pathParameters: {'id': cafe.id},
-                      );
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primary,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                    ),
-                    child: const Text(
-                      'Lihat Detail',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
+                  ],
                 ),
-              ],
+              ),
             ),
           ),
-        ),
-      ),
     );
   }
 

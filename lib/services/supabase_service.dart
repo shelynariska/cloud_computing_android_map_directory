@@ -35,11 +35,8 @@ class SupabaseService {
   /// Fetch cafe by ID untuk detail screen
   Future<Cafe?> getCafeById(String cafeId) async {
     try {
-      final response = await _supabase
-          .from('cafes')
-          .select()
-          .eq('id', cafeId)
-          .maybeSingle();
+      final response =
+          await _supabase.from('cafes').select().eq('id', cafeId).maybeSingle();
 
       if (response == null) return null;
 
@@ -73,9 +70,10 @@ class SupabaseService {
   /// Search cafes by name / description
   Future<List<Cafe>> searchCafes(String query) async {
     try {
-      final response = await _supabase.from('cafes').select().or(
-            'name.ilike.%$query%,description.ilike.%$query%',
-          );
+      final response = await _supabase
+          .from('cafes')
+          .select()
+          .or('name.ilike.%$query%,description.ilike.%$query%');
 
       return (response as List)
           .map((cafe) => Cafe.fromJson(cafe as Map<String, dynamic>))
@@ -95,10 +93,10 @@ class SupabaseService {
     double radiusKm,
   ) async {
     try {
-      final response = await _supabase.from('cafes').select().order(
-            'distance',
-            ascending: true,
-          );
+      final response = await _supabase
+          .from('cafes')
+          .select()
+          .order('distance', ascending: true);
 
       // Filter by distance di client side (jika PostGIS tidak available)
       // TODO: Implement server-side distance calculation jika PostGIS tersedia
@@ -117,8 +115,10 @@ class SupabaseService {
   /// Fetch semua categories
   Future<List<Map<String, dynamic>>> getCategories() async {
     try {
-      final response =
-          await _supabase.from('categories').select().order('name');
+      final response = await _supabase
+          .from('categories')
+          .select()
+          .order('name');
 
       return List<Map<String, dynamic>>.from(response);
     } on PostgrestException catch (e) {
@@ -134,9 +134,9 @@ class SupabaseService {
   Future<void> addToFavorites(String cafeId, String userId) async {
     try {
       await _supabase.from('favorites').insert({
-        'cafe_id': cafeId,
+        'cafe_id': int.parse(cafeId),
         'user_id': userId,
-        'created_at': DateTime.now().toIso8601String(),
+        'added_at': DateTime.now().toIso8601String(),
       });
     } on PostgrestException catch (e) {
       throw Exception('Error adding to favorites: ${e.message}');
@@ -151,7 +151,7 @@ class SupabaseService {
       await _supabase
           .from('favorites')
           .delete()
-          .eq('cafe_id', cafeId)
+          .eq('cafe_id', int.parse(cafeId))
           .eq('user_id', userId);
     } on PostgrestException catch (e) {
       throw Exception('Error removing from favorites: ${e.message}');
@@ -163,13 +163,13 @@ class SupabaseService {
   /// Check if cafe ada di favorites
   Future<bool> isFavorite(String cafeId, String userId) async {
     try {
-      final response = await _supabase
-          .from('favorites')
-          .select()
-          .eq('cafe_id', cafeId)
-          .eq('user_id', userId)
-          .maybeSingle();
-
+      final response =
+          await _supabase
+              .from('favorites')
+              .select()
+              .eq('cafe_id', int.parse(cafeId))
+              .eq('user_id', userId)
+              .maybeSingle();
       return response != null;
     } on PostgrestException catch (e) {
       throw Exception('Error checking favorites: ${e.message}');
@@ -187,8 +187,7 @@ class SupabaseService {
           .eq('user_id', userId);
 
       return (response as List)
-          .map((item) =>
-              Cafe.fromJson(item['cafes'] as Map<String, dynamic>))
+          .map((item) => Cafe.fromJson(item['cafes'] as Map<String, dynamic>))
           .toList();
     } on PostgrestException catch (e) {
       throw Exception('Error fetching favorite cafes: ${e.message}');
@@ -226,11 +225,11 @@ class SupabaseService {
 
       if ((response as List).isEmpty) return null;
 
-      final ratings = (response as List)
-          .map((item) => (item['rating'] as num).toDouble())
-          .toList();
-      final average =
-          ratings.reduce((a, b) => a + b) / ratings.length;
+      final ratings =
+          (response as List)
+              .map((item) => (item['rating'] as num).toDouble())
+              .toList();
+      final average = ratings.reduce((a, b) => a + b) / ratings.length;
 
       return average;
     } on PostgrestException catch (e) {
@@ -285,8 +284,7 @@ class SupabaseService {
   /// Test connection ke Supabase
   Future<bool> testConnection() async {
     try {
-      final response =
-          await _supabase.from('cafes').select().limit(1);
+      final response = await _supabase.from('cafes').select().limit(1);
       return response != null;
     } catch (e) {
       return false;

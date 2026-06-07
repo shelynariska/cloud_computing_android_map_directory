@@ -14,11 +14,11 @@ final supabaseServiceProvider = Provider<SupabaseService>((ref) {
 /// Falls back ke mock data jika connection error
 final allCafesProvider = FutureProvider<List<Cafe>>((ref) async {
   final supabaseService = ref.watch(supabaseServiceProvider);
-  
+
   try {
     // Test connection first
     final isConnected = await supabaseService.testConnection();
-    
+
     if (isConnected) {
       return await supabaseService.getAllCafes();
     } else {
@@ -33,9 +33,12 @@ final allCafesProvider = FutureProvider<List<Cafe>>((ref) async {
 });
 
 /// Get cafe detail by ID
-final cafeByIdProvider = FutureProvider.family<Cafe?, String>((ref, cafeId) async {
+final cafeByIdProvider = FutureProvider.family<Cafe?, String>((
+  ref,
+  cafeId,
+) async {
   final supabaseService = ref.watch(supabaseServiceProvider);
-  
+
   try {
     return await supabaseService.getCafeById(cafeId);
   } catch (e) {
@@ -50,14 +53,16 @@ final cafeByIdProvider = FutureProvider.family<Cafe?, String>((ref, cafeId) asyn
 });
 
 /// Search cafes
-final searchCafesProvider =
-    FutureProvider.family<List<Cafe>, String>((ref, query) async {
+final searchCafesProvider = FutureProvider.family<List<Cafe>, String>((
+  ref,
+  query,
+) async {
   final supabaseService = ref.watch(supabaseServiceProvider);
-  
+
   if (query.isEmpty) {
     return [];
   }
-  
+
   try {
     return await supabaseService.searchCafes(query);
   } catch (e) {
@@ -67,10 +72,12 @@ final searchCafesProvider =
 });
 
 /// Get cafes by category
-final cafesByCategoryProvider =
-    FutureProvider.family<List<Cafe>, String>((ref, categoryId) async {
+final cafesByCategoryProvider = FutureProvider.family<List<Cafe>, String>((
+  ref,
+  categoryId,
+) async {
   final supabaseService = ref.watch(supabaseServiceProvider);
-  
+
   try {
     return await supabaseService.getCafesByCategory(categoryId);
   } catch (e) {
@@ -82,10 +89,11 @@ final cafesByCategoryProvider =
 // ========== CATEGORIES PROVIDERS ==========
 
 /// Fetch all categories
-final categoriesProvider =
-    FutureProvider<List<Map<String, dynamic>>>((ref) async {
+final categoriesProvider = FutureProvider<List<Map<String, dynamic>>>((
+  ref,
+) async {
   final supabaseService = ref.watch(supabaseServiceProvider);
-  
+
   try {
     return await supabaseService.getCategories();
   } catch (e) {
@@ -114,17 +122,21 @@ final filteredCafesProvider = Provider<AsyncValue<List<Cafe>>>((ref) {
 
       // Filter by search query
       if (searchQuery.isNotEmpty) {
-        filtered = filtered.where((cafe) {
-          return cafe.name.toLowerCase().contains(searchQuery.toLowerCase()) ||
-              cafe.description.toLowerCase().contains(searchQuery.toLowerCase());
-        }).toList();
+        filtered =
+            filtered.where((cafe) {
+              return cafe.name.toLowerCase().contains(
+                    searchQuery.toLowerCase(),
+                  ) ||
+                  cafe.description.toLowerCase().contains(
+                    searchQuery.toLowerCase(),
+                  );
+            }).toList();
       }
 
       // Filter by region
       if (selectedRegion != null) {
-        filtered = filtered
-            .where((cafe) => cafe.region == selectedRegion)
-            .toList();
+        filtered =
+            filtered.where((cafe) => cafe.region == selectedRegion).toList();
       }
 
       // Sort by rating
@@ -150,11 +162,11 @@ final userIdProvider = Provider<String?>((ref) {
 final favoriteCafesProvider = FutureProvider<List<Cafe>>((ref) async {
   final supabaseService = ref.watch(supabaseServiceProvider);
   final userId = ref.watch(userIdProvider);
-  
+
   if (userId == null) {
     return [];
   }
-  
+
   try {
     return await supabaseService.getFavoriteCafes(userId);
   } catch (e) {
@@ -164,15 +176,17 @@ final favoriteCafesProvider = FutureProvider<List<Cafe>>((ref) async {
 });
 
 /// Check if cafe is favorited
-final isCafeFavoritedProvider =
-    FutureProvider.family<bool, String>((ref, cafeId) async {
+final isCafeFavoritedProvider = FutureProvider.family<bool, String>((
+  ref,
+  cafeId,
+) async {
   final supabaseService = ref.watch(supabaseServiceProvider);
   final userId = ref.watch(userIdProvider);
-  
+
   if (userId == null) {
     return false;
   }
-  
+
   try {
     return await supabaseService.isFavorite(cafeId, userId);
   } catch (e) {
@@ -182,11 +196,10 @@ final isCafeFavoritedProvider =
 });
 
 /// Toggle favorite cafe
-final toggleFavoriteCafeProvider = StateNotifierProvider<
-    ToggleFavoriteCafeNotifier,
-    AsyncValue<void>>((ref) {
-  return ToggleFavoriteCafeNotifier(ref);
-});
+final toggleFavoriteCafeProvider =
+    StateNotifierProvider<ToggleFavoriteCafeNotifier, AsyncValue<void>>((ref) {
+      return ToggleFavoriteCafeNotifier(ref);
+    });
 
 class ToggleFavoriteCafeNotifier extends StateNotifier<AsyncValue<void>> {
   final Ref ref;
@@ -198,23 +211,28 @@ class ToggleFavoriteCafeNotifier extends StateNotifier<AsyncValue<void>> {
     try {
       final supabaseService = ref.read(supabaseServiceProvider);
       final userId = ref.read(userIdProvider);
-      
+
+      if (userId == null) {
+        print('❌ User not logged in!');
+        throw Exception('User not authenticated');
+      }
+
       if (userId == null) {
         throw Exception('User not authenticated');
       }
-      
+
       final isFav = await supabaseService.isFavorite(cafeId, userId);
-      
+
       if (isFav) {
         await supabaseService.removeFromFavorites(cafeId, userId);
       } else {
         await supabaseService.addToFavorites(cafeId, userId);
       }
-      
+
       // Invalidate favorites provider untuk refresh
       ref.invalidate(favoriteCafesProvider);
       ref.invalidate(isCafeFavoritedProvider);
-      
+
       state = const AsyncValue.data(null);
     } catch (error, stack) {
       state = AsyncValue.error(error, stack);
@@ -226,22 +244,27 @@ class ToggleFavoriteCafeNotifier extends StateNotifier<AsyncValue<void>> {
 
 /// Fetch reviews untuk cafe
 final cafeReviewsProvider =
-    FutureProvider.family<List<Map<String, dynamic>>, String>((ref, cafeId) async {
-  final supabaseService = ref.watch(supabaseServiceProvider);
-  
-  try {
-    return await supabaseService.getCafeReviews(cafeId);
-  } catch (e) {
-    print('Error fetching cafe reviews: $e');
-    return [];
-  }
-});
+    FutureProvider.family<List<Map<String, dynamic>>, String>((
+      ref,
+      cafeId,
+    ) async {
+      final supabaseService = ref.watch(supabaseServiceProvider);
+
+      try {
+        return await supabaseService.getCafeReviews(cafeId);
+      } catch (e) {
+        print('Error fetching cafe reviews: $e');
+        return [];
+      }
+    });
 
 /// Get average rating untuk cafe
-final cafeAverageRatingProvider =
-    FutureProvider.family<double?, String>((ref, cafeId) async {
+final cafeAverageRatingProvider = FutureProvider.family<double?, String>((
+  ref,
+  cafeId,
+) async {
   final supabaseService = ref.watch(supabaseServiceProvider);
-  
+
   try {
     return await supabaseService.getCafeAverageRating(cafeId);
   } catch (e) {
@@ -251,11 +274,10 @@ final cafeAverageRatingProvider =
 });
 
 /// Add review untuk cafe
-final addReviewProvider = StateNotifierProvider<
-    AddReviewNotifier,
-    AsyncValue<void>>((ref) {
-  return AddReviewNotifier(ref);
-});
+final addReviewProvider =
+    StateNotifierProvider<AddReviewNotifier, AsyncValue<void>>((ref) {
+      return AddReviewNotifier(ref);
+    });
 
 class AddReviewNotifier extends StateNotifier<AsyncValue<void>> {
   final Ref ref;
@@ -271,22 +293,22 @@ class AddReviewNotifier extends StateNotifier<AsyncValue<void>> {
     try {
       final supabaseService = ref.read(supabaseServiceProvider);
       final userId = ref.read(userIdProvider);
-      
+
       if (userId == null) {
         throw Exception('User not authenticated');
       }
-      
+
       await supabaseService.addReview(
         cafeId: cafeId,
         userId: userId,
         rating: rating,
         comment: comment,
       );
-      
+
       // Invalidate reviews untuk refresh
       ref.invalidate(cafeReviewsProvider);
       ref.invalidate(cafeAverageRatingProvider);
-      
+
       state = const AsyncValue.data(null);
     } catch (error, stack) {
       state = AsyncValue.error(error, stack);
