@@ -62,6 +62,16 @@ class BottomNav extends StatelessWidget {
                   }
                 },
               ),
+              _NavItem(
+                icon: Icons.person_outline,
+                label: 'Profil',
+                isActive: currentIndex == 3,
+                onTap: () {
+                  if (currentIndex != 3) {
+                    context.goNamed(AppRoute.profile.name);
+                  }
+                },
+              ),
             ],
           ),
         ),

@@ -137,9 +137,16 @@ class _CafeDetailScreenState extends ConsumerState<CafeDetailScreen> {
                         color: isFav ? Colors.red : AppColors.primary,
                         size: 24,
                       ),
-                      onPressed: () => ref
-                          .read(toggleFavoriteCafeProvider.notifier)
-                          .toggleFavorite(widget.cafeId),
+                      onPressed: () {
+                        final userId = ref.read(userIdProvider);
+                        if (userId == null) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Login dulu untuk menyimpan favorit')),
+                          );
+                          return;
+                        }
+                        ref.read(toggleFavoriteCafeProvider.notifier).toggleFavorite(widget.cafeId);
+                      },
                     ),
                     loading: () => const SizedBox(width: 48),
                     error: (_, __) => const SizedBox(width: 48),

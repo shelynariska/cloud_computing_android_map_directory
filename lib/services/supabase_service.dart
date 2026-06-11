@@ -204,7 +204,7 @@ class SupabaseService {
       final response = await _supabase
           .from('reviews')
           .select()
-          .eq('cafe_id', cafeId)
+          .eq('cafe_id', int.parse(cafeId))
           .order('created_at', ascending: false);
 
       return List<Map<String, dynamic>>.from(response);
@@ -221,7 +221,7 @@ class SupabaseService {
       final response = await _supabase
           .from('reviews')
           .select('rating')
-          .eq('cafe_id', cafeId);
+          .eq('cafe_id', int.parse(cafeId));
 
       if ((response as List).isEmpty) return null;
 
@@ -248,7 +248,7 @@ class SupabaseService {
   }) async {
     try {
       await _supabase.from('reviews').insert({
-        'cafe_id': cafeId,
+        'cafe_id': int.parse(cafeId),
         'user_id': userId,
         'rating': rating,
         'comment': comment,
@@ -267,7 +267,7 @@ class SupabaseService {
   Future<void> logVisit(String cafeId, String userId) async {
     try {
       await _supabase.from('visit_stats').insert({
-        'cafe_id': cafeId,
+        'cafe_id': int.parse(cafeId),
         'user_id': userId,
         'visited_at': DateTime.now().toIso8601String(),
       });
