@@ -296,10 +296,14 @@ class _CafeDetailScreenState extends ConsumerState<CafeDetailScreen> {
                                   cafe.longitude,
                                   cafe.name,
                                 ),
-                                icon: const Icon(Icons.directions),
-                                label: const Text('Rute'),
+                                icon: const Icon(Icons.directions, color: Colors.white),
+                                label: const Text(
+                                  'Rute',
+                                  style: TextStyle(color: Colors.white), // ← tambah ini
+                                ),
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: AppColors.primary,
+                                  foregroundColor: Colors.white,
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(8),
                                   ),

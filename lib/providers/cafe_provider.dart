@@ -3,6 +3,7 @@ import 'package:cafescope_sby/models/cafe.dart';
 import 'package:cafescope_sby/services/supabase_service.dart';
 import 'package:cafescope_sby/data/mock_cafes.dart';
 import 'dart:math';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 final supabaseServiceProvider = Provider<SupabaseService>((ref) {
   return SupabaseService();
@@ -152,10 +153,15 @@ final filteredCafesProvider = Provider<AsyncValue<List<Cafe>>>((ref) {
 
 // ========== FAVORITES PROVIDERS ==========
 
-/// Get user ID untuk favorites tracking
+final authStateProvider = StreamProvider<String?>((ref) {
+  return Supabase.instance.client.auth.onAuthStateChange.map((event) {
+    return event.session?.user.id;
+  });
+});
+
 final userIdProvider = Provider<String?>((ref) {
-  final supabaseService = ref.watch(supabaseServiceProvider);
-  return supabaseService.getCurrentUserId();
+  final authState = ref.watch(authStateProvider);
+  return authState.value ?? Supabase.instance.client.auth.currentUser?.id;
 });
 
 /// Fetch favorite cafes untuk user

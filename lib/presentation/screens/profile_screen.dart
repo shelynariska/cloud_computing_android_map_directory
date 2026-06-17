@@ -5,12 +5,15 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:cafescope_sby/app/theme/app_colors.dart';
 import 'package:cafescope_sby/app/router/app_router.dart';
 import 'package:cafescope_sby/presentation/widgets/bottom_nav.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:cafescope_sby/providers/cafe_provider.dart';
 
-class ProfileScreen extends StatelessWidget {
+class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({Key? key}) : super(key: key);
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final userId = ref.watch(userIdProvider);
     final user = Supabase.instance.client.auth.currentUser;
 
     return Scaffold(
@@ -27,7 +30,10 @@ class ProfileScreen extends StatelessWidget {
         backgroundColor: AppColors.background,
         elevation: 0,
       ),
-      body: user == null ? _buildGuest(context) : _buildLoggedIn(context, user),
+      body:
+          userId == null
+              ? _buildGuest(context)
+              : _buildLoggedIn(context, ref, user!),
       bottomNavigationBar: const BottomNav(currentIndex: 3),
     );
   }
@@ -114,13 +120,13 @@ class ProfileScreen extends StatelessWidget {
   }
 
   // Sudah login
-  Widget _buildLoggedIn(BuildContext context, User user) {
+  Widget _buildLoggedIn(BuildContext context, WidgetRef ref, User user) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Avatar + info
+          // Avatar + info (sama seperti sebelumnya)
           Row(
             children: [
               CircleAvatar(
@@ -155,19 +161,67 @@ class ProfileScreen extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 32),
-
-          // Divider
           Divider(color: AppColors.muted),
           const SizedBox(height: 24),
 
-          // Tombol Logout
+          // Tombol Logout dengan dialog konfirmasi
           SizedBox(
             width: double.infinity,
             child: OutlinedButton.icon(
               onPressed: () async {
-                await Supabase.instance.client.auth.signOut();
-                if (context.mounted) {
-                  context.goNamed(AppRoute.profile.name); // refresh halaman
+                // ← Tambah dialog konfirmasi
+                final confirm = await showDialog<bool>(
+                  context: context,
+                  builder:
+                      (ctx) => AlertDialog(
+                        backgroundColor: AppColors.card,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        title: Text(
+                          'Keluar Akun',
+                          style: GoogleFonts.poppins(
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.foreground,
+                          ),
+                        ),
+                        content: Text(
+                          'Kamu yakin ingin keluar?',
+                          style: GoogleFonts.inter(
+                            fontSize: 14,
+                            color: AppColors.mutedForeground,
+                          ),
+                        ),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(ctx, false),
+                            child: Text(
+                              'Batal',
+                              style: GoogleFonts.poppins(
+                                color: AppColors.mutedForeground,
+                              ),
+                            ),
+                          ),
+                          ElevatedButton(
+                            onPressed: () => Navigator.pop(ctx, true),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.destructive,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                            ),
+                            child: Text(
+                              'Keluar',
+                              style: GoogleFonts.poppins(color: Colors.white),
+                            ),
+                          ),
+                        ],
+                      ),
+                );
+
+                if (confirm == true) {
+                  await Supabase.instance.client.auth.signOut();
+                  // Tidak perlu navigate — authStateProvider otomatis rebuild
                 }
               },
               icon: Icon(Icons.logout, color: AppColors.destructive),

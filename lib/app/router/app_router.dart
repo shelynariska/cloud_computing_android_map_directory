@@ -27,52 +27,61 @@ enum AppRoute {
   final String path;
 }
 
+Page<void> _noTransitionPage(Widget child) {
+  return CustomTransitionPage(
+    child: child,
+    transitionsBuilder: (context, animation, secondaryAnimation, child) {
+      return child; 
+    },
+  );
+}
+
 final List<RouteBase> appRoutes = [
   GoRoute(
     path: AppRoute.splash.path,
     name: AppRoute.splash.name,
-    builder: (context, state) => const SplashScreen(),
+    builder: (context, state) => const SplashScreen(), 
     redirect: (context, state) async {
       await Future.delayed(const Duration(seconds: 2));
-      return AppRoute.home.path; // semua user langsung ke home
+      return AppRoute.home.path;
     },
   ),
   GoRoute(
     path: AppRoute.home.path,
     name: AppRoute.home.name,
-    builder: (context, state) => const HomeScreen(),
+    pageBuilder: (context, state) => _noTransitionPage(const HomeScreen()),
   ),
   GoRoute(
     path: AppRoute.cafeDetail.path,
     name: AppRoute.cafeDetail.name,
-    builder: (context, state) {
+    pageBuilder: (context, state) {
       final cafeId = state.pathParameters['id'] ?? '';
-      return CafeDetailScreen(cafeId: cafeId);
+      return _noTransitionPage(CafeDetailScreen(cafeId: cafeId));
     },
   ),
   GoRoute(
     path: AppRoute.map.path,
     name: AppRoute.map.name,
-    builder: (context, state) => const MapPage(), // sesuai repo teman kamu
+    pageBuilder: (context, state) => _noTransitionPage(const MapPage()),
   ),
   GoRoute(
     path: AppRoute.favorites.path,
     name: AppRoute.favorites.name,
-    builder: (context, state) => const FavoritesScreen(),
+    pageBuilder: (context, state) => _noTransitionPage(const FavoritesScreen()),
   ),
   GoRoute(
     path: AppRoute.login.path,
     name: AppRoute.login.name,
-    builder: (context, state) => const LoginScreen(),
+    pageBuilder: (context, state) => _noTransitionPage(const LoginScreen()),
   ),
   GoRoute(
     path: AppRoute.register.path,
     name: AppRoute.register.name,
-    builder: (context, state) => const RegisterScreen(),
+    pageBuilder: (context, state) => _noTransitionPage(const RegisterScreen()),
   ),
   GoRoute(
     path: AppRoute.profile.path,
     name: AppRoute.profile.name,
-    builder: (context, state) => const ProfileScreen(),
+    pageBuilder: (context, state) => _noTransitionPage(const ProfileScreen()),
   ),
 ];
