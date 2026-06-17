@@ -32,6 +32,7 @@
 | ❤️ **Favorit** | Menyimpan kafe favorit (memerlukan login) |
 | 🔍 **Search & Filter** | Pencarian kafe dan filter berdasarkan wilayah |
 | 🔐 **Autentikasi** | Login & Register via Supabase Auth |
+| 👤 **Profil** | Halaman akun dengan info pengguna dan logout |
 | 📊 **355+ Kafe** | Data lengkap kafe-kafe wilayah Surabaya |
 
 ---
@@ -84,16 +85,19 @@ dependencies:
 ---
 
 ## 🗄️ Struktur Database (Supabase)
-
-```
 cafes          → Data utama kafe (nama, koordinat, fasilitas, rating)
+
 categories     → Kategori kafe
+
 favorites      → Kafe favorit per user
+
 reviews        → Ulasan dan rating dari user
+
 visit_stats    → Statistik kunjungan kafe
+
 place_photos   → Foto kafe
+
 issue_reports  → Laporan masalah kafe
-```
 
 ---
 
@@ -142,27 +146,43 @@ flutter run
 ---
 
 ## 📂 Struktur Project
-
-```
 lib/
+
 ├── app/
+
 │   ├── router/         # Konfigurasi navigasi (Go Router)
+
 │   └── theme/          # Warna dan tema aplikasi
+
 ├── data/               # Mock data fallback
+
 ├── models/             # Model data (Cafe, dll)
+
 ├── presentation/
+
 │   ├── screens/        # Halaman aplikasi
+
 │   │   ├── splash_screen.dart
+
 │   │   ├── home_screen.dart
+
 │   │   ├── map_page.dart
+
 │   │   ├── cafe_detail_screen.dart
+
 │   │   ├── favorites_screen.dart
+
+│   │   ├── profile_screen.dart
+
 │   │   ├── login_screen.dart
+
 │   │   └── register_screen.dart
+
 │   └── widgets/        # Widget reusable
+
 ├── providers/          # Riverpod providers
+
 └── services/           # Supabase service & Navigation service
-```
 
 ---
 
@@ -184,9 +204,10 @@ lib/
 
 **Tugas:**
 - Membuat project Flutter
-- Membuat tampilan: Splash Screen, Home Page, Detail Cafe, Filter Wilayah
+- Membuat tampilan: Splash Screen, Home Page, Detail Cafe, Filter Wilayah, Profile
 - Membuat card/list cafe dan navigasi antar halaman
 - Menampilkan data cafe dari Supabase ke UI
+- Implementasi fitur Favorit dan Autentikasi (Login, Register, Logout)
 - Menyesuaikan tampilan agar rapi dan user-friendly
 
 **Output:**
@@ -194,6 +215,8 @@ lib/
 - ✅ List cafe tampil
 - ✅ Filter wilayah tampil
 - ✅ Detail cafe tampil
+- ✅ Halaman Profile dengan kondisi login/guest
+- ✅ Fitur Favorit tersimpan di Supabase
 
 ---
 
@@ -271,6 +294,8 @@ lib/
 - ✅ GPS user
 - ✅ Jarak user ke cafe
 - ✅ Rute di peta
+- ✅ Autentikasi pengguna (Login, Register, Logout)
+- ✅ Fitur Favorit per pengguna
 
 ---
 
@@ -286,7 +311,13 @@ lib/
 
 ## 📸 Screenshot
 
-> *Tambahkan screenshot aplikasi di sini*
+| Registrasi | Login | Home | Detail Cafe |
+|---|---|---|---|
+| ![Signup](screenshots/signup.png) | ![Login](screenshots/login.png) | ![Home](screenshots/home.png) | ![Detail](screenshots/detail_cafe.png) |
+
+| Peta | Favorite | Profil (Guest) | Profil (Login) |
+|---|---|---|---|
+| ![Map](screenshots/map.png) | ![Favorite](screenshots/favorite.png) | ![Guest](screenshots/profile_guest.png) | ![PLogin](screenshots/profile_login.png)
 
 ---
 
@@ -325,7 +356,7 @@ Pengujian dilakukan secara manual langsung di perangkat/simulator dan diverifika
 
 | No | Skenario | Hasil |
 |---|---|---|
-| 1 | Tap icon ❤️ tanpa login | ✅ Diarahkan ke halaman login |
+| 1 | Tap icon ❤️ tanpa login | ✅ Muncul pesan untuk login terlebih dahulu |
 | 2 | Tap icon ❤️ setelah login | ✅ Kafe tersimpan di tabel `favorites` Supabase |
 | 3 | Tap icon ❤️ kedua kali (hapus) | ✅ Kafe berhasil dihapus dari favorit |
 | 4 | Buka halaman Favorit | ✅ Daftar kafe favorit tampil |
@@ -339,30 +370,62 @@ Pengujian dilakukan secara manual langsung di perangkat/simulator dan diverifika
 | 3 | Login dengan password salah | ✅ Muncul pesan error yang sesuai |
 | 4 | Lanjut tanpa login | ✅ Bisa akses Home & Peta tanpa login |
 
+### Hasil Testing Profil
+
+| No | Skenario | Hasil |
+|---|---|---|
+| 1 | Buka tab Profil tanpa login | ✅ Tampil tombol Login & Register |
+| 2 | Buka tab Profil setelah login | ✅ Tampil nama, email, dan tombol Logout |
+| 3 | Tap Logout → dialog konfirmasi | ✅ Dialog konfirmasi muncul |
+| 4 | Konfirmasi Logout | ✅ Tampilan kembali ke halaman guest otomatis |
+
 ---
 
 ## 📖 Dokumentasi Teknis
 
 ### Arsitektur Fitur Maps
-
-```
 MapPage (ConsumerStatefulWidget)
+
 ├── _initializeLocation()     → Request GPS permission & get position
+
 ├── _startPulseAnimation()    → Animasi lingkaran pulse di lokasi user
+
 ├── _getRouteFromOSRM()       → Fetch rute dari OSRM API
+
 ├── _calculateDistance()      → Haversine formula untuk hitung jarak (km)
+
 ├── _getCategoryMarkerColor() → Warna marker berdasarkan kategori kafe
+
 └── _showCafePopup()          → Dialog info kafe + tombol rute & favorit
-```
+
+### Alur Pengguna (User Flow)
+
+**Skenario 1 — Pengguna Tanpa Login:**
+Buka aplikasi → izinkan akses GPS →
+
+Lihat daftar kafe → filter wilayah →
+
+Pilih kafe → lihat detail (jarak, fasilitas, review) →
+
+Tap "Rute" → buka navigasi eksternal
+
+**Skenario 2 — Pengguna Dengan Login:**
+Tap Profil → Login/Register →
+
+Tap ❤️ pada kafe → tersimpan ke Supabase →
+
+Buka tab Favorit → lihat daftar kafe favorit →
+
+Tap Profil → Logout → konfirmasi → kembali ke tampilan guest
 
 ### Cara Kerja GPS & Routing
 
 **1. Inisialisasi GPS**
-```
 App start → Cek Location Service → Cek Permission →
+
 Request Permission (jika denied) → Get Current Position →
+
 Update UI & Move Camera ke posisi user
-```
 
 **2. Kalkulasi Jarak (Haversine Formula)**
 ```dart
@@ -374,27 +437,39 @@ double _calculateDistance(lat1, lon1, lat2, lon2) {
 ```
 
 **3. Routing via OSRM**
-```
 User tap "Tampilkan Rute" →
+
 Request ke router.project-osrm.org →
+
 Parse GeoJSON coordinates →
+
 Render Polyline oranye di flutter_map
-```
 
 **4. Filter Radius**
-```
 User pilih radius (0.5 / 1 / 2 / 5 km) →
+
 Filter cafes where distance <= radiusKm →
+
 Update MarkerLayer + CircleLayer + InfoBar secara real-time
-```
+
+### Keamanan Sistem
+
+- API Key Supabase (anon key) hanya memiliki permission terbatas sesuai **Row Level Security (RLS)**
+- Kredensial database tidak pernah disertakan dalam kode aplikasi
+- Semua komunikasi menggunakan **HTTPS/TLS** secara default
+- RLS dikonfigurasi agar pengguna hanya dapat mengakses data favorit dan review milik sendiri
 
 ### API Endpoint yang Digunakan
 
-| Endpoint | Fungsi |
-|---|---|
-| `GET /cafes` | Fetch semua data kafe dari Supabase |
-| `GET /cafes?id=eq.{id}` | Fetch detail kafe by ID |
-| `GET /favorites?user_id=eq.{uid}` | Fetch favorit user |
-| `POST /favorites` | Tambah kafe ke favorit |
-| `DELETE /favorites` | Hapus kafe dari favorit |
-| `router.project-osrm.org/route/v1/driving` | Kalkulasi rute mengemudi |
+| Endpoint | Method | Fungsi |
+|---|---|---|
+| `/cafes` | GET | Fetch semua data kafe dari Supabase |
+| `/cafes?id=eq.{id}` | GET | Fetch detail kafe by ID |
+| `/categories` | GET | Fetch daftar kategori |
+| `/favorites?user_id=eq.{uid}` | GET | Fetch favorit user |
+| `/favorites` | POST | Tambah kafe ke favorit |
+| `/favorites?id=eq.{id}` | DELETE | Hapus kafe dari favorit |
+| `/reviews` | GET | Fetch daftar review |
+| `/place_photos` | GET | Fetch foto kafe |
+| `/visit_stats` | GET | Fetch statistik kunjungan |
+| `router.project-osrm.org/route/v1/driving` | GET | Kalkulasi rute mengemudi |
