@@ -311,13 +311,35 @@ lib/
 
 ## 📸 Screenshot
 
-| Registrasi | Login | Home | Detail Cafe |
-|---|---|---|---|
-| ![Signup](screenshots/signup.png) | ![Login](screenshots/login.png) | ![Home](screenshots/home.png) | ![Detail](screenshots/detail_cafe.png) |
+<table>
+  <tr>
+    <th>Registrasi</th>
+    <th>Login</th>
+    <th>Home</th>
+    <th>Detail Cafe</th>
+  </tr>
+  <tr>
+    <td><img src="https://github.com/user-attachments/assets/d94f92e6-c2a5-4e9d-83fb-a164178e700e" width="180"></td>
+    <td><img src="https://github.com/user-attachments/assets/73140e5a-0865-4d9c-8da8-8c1bfe993ad7" width="180"></td>
+    <td><img src="https://github.com/user-attachments/assets/badc87f3-e88b-4591-9b34-4791421f1113" width="180"></td>
+    <td><img src="https://github.com/user-attachments/assets/a3accc77-7659-45d2-a1d6-773a30753c33" width="180"></td>
+  </tr>
+</table>
 
-| Peta | Favorite | Profil (Guest) | Profil (Login) |
-|---|---|---|---|
-| ![Map](screenshots/map.png) | ![Favorite](screenshots/favorite.png) | ![Guest](screenshots/profile_guest.png) | ![PLogin](screenshots/profile_login.png)
+<table>
+  <tr>
+    <th>Peta</th>
+    <th>Favorite</th>
+    <th>Profil (Guest)</th>
+    <th>Profil (Login)</th>
+  </tr>
+  <tr>
+    <td>< width="180"></td>
+    <td>< width="180"></td>
+    <td><img src="https://github.com/user-attachments/assets/a293375a-ec0f-4b87-9c92-8f686ce2a67c" width="180"></td>
+    <td>< width="180"></td>
+  </tr>
+</table>
 
 ---
 
