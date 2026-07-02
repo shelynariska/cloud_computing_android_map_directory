@@ -334,10 +334,10 @@ lib/
     <th>Profil (Login)</th>
   </tr>
   <tr>
-    <td>< width="180"></td>
-    <td>< width="180"></td>
+    <td><img src="https://github.com/user-attachments/assets/67b6fad4-62a2-4636-a6b4-4959e7491ce5" width="180"></td>
+    <td><img src="https://github.com/user-attachments/assets/00c96076-cce0-488d-bce3-c45ed1c480fe" width="180"></td>
     <td><img src="https://github.com/user-attachments/assets/a293375a-ec0f-4b87-9c92-8f686ce2a67c" width="180"></td>
-    <td>< width="180"></td>
+    <td><img src="https://github.com/user-attachments/assets/fa2d29c6-4711-429b-bc9a-1dea7cc4d85e" width="180"></td>
   </tr>
 </table>
 
